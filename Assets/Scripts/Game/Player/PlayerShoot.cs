@@ -16,6 +16,7 @@ public class PlayerShoot : MonoBehaviour
     private Camera _camera;
 
     private bool _isAiming = false;
+    private TargetMarker _currentTarget;
 
     private void OnEnable()
     {
@@ -52,6 +53,10 @@ public class PlayerShoot : MonoBehaviour
         {
             Aim();
         }
+        else if (_currentTarget != null)
+        {
+            _currentTarget.GetComponent<MeshRenderer>().enabled = false;
+        }
     }
 
     private void OnInputAttack(InputAction.CallbackContext context)
@@ -86,6 +91,20 @@ public class PlayerShoot : MonoBehaviour
         {
             _aimTrailTransform.LookAt(hitInfo.point);
             _aimTrailTransform.localEulerAngles = new Vector3(0, _aimTrailTransform.localEulerAngles.y, 0);
+            Ray detectionRay = new Ray(transform.position, _aimTrailTransform.forward);
+
+            if (Physics.Raycast(detectionRay, out RaycastHit detectionHit, 8.0f) && detectionHit.collider.TryGetComponent(out TargetMarker targetMarker))
+            {
+                if (targetMarker != _currentTarget && _currentTarget != null)
+                    _currentTarget.GetComponent<MeshRenderer>().enabled = false;
+
+                _currentTarget = targetMarker;
+                _currentTarget.GetComponent<MeshRenderer>().enabled = true;
+            }
+            else if (_currentTarget != null)
+            {
+                _currentTarget.GetComponent<MeshRenderer>().enabled = false;
+            }
         }
     }
 }
